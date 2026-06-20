@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# BMad — user-specific overrides (personal, do not commit)
+_bmad/bmm/config.user.yaml
+_bmad/custom/*.user.toml
+
+# Claude Code — local user settings
+.claude/settings.local.json
