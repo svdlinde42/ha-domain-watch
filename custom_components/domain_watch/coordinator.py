@@ -11,7 +11,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_INTERVAL, CONF_KEYWORDS, DEFAULT_INTERVAL, DOMAIN
+from .const import (
+    CONF_INTERVAL,
+    CONF_KEYWORDS,
+    CONF_NOTIFY,
+    DEFAULT_INTERVAL,
+    DOMAIN,
+    EVENT_DETECTED,
+)
 from .sources import SOURCES, Detection
 from .store import DomainWatchStore
 
@@ -73,7 +80,8 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Write new detections to in-memory state and flush the store.
 
         This is the single write path — called only from _async_update_data.
-        The store is flushed after every mutation so the state survives a crash.
+        Store is flushed before events are fired so state is durable if a
+        subsequent step fails.
         """
         now = dt_util.utcnow().isoformat()
         for d in detections:
@@ -84,4 +92,32 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 **d.evidence,
             }
             _LOGGER.info("New impostor domain detected: %s", d.domain)
+
         await self._store.async_save(self._seen)
+
+        for d in detections:
+            self.hass.bus.async_fire(EVENT_DETECTED, {"domain": d.domain, **self._seen[d.domain]})
+
+        await self._async_notify(detections)
+
+    async def _async_notify(self, detections: list[Detection]) -> None:
+        """Call the configured HA notify service for each new detection."""
+        raw = self._entry.options.get(CONF_NOTIFY, "").strip()
+        if not raw:
+            return
+        # Accept both "notify.service_name" and "service_name"
+        service = raw.removeprefix("notify.")
+        for d in detections:
+            record = self._seen[d.domain]
+            lines = [f"New impostor domain: {d.domain}"]
+            if "not_before" in record:
+                lines.append(f"Cert issued: {record['not_before']}")
+            try:
+                await self.hass.services.async_call(
+                    "notify",
+                    service,
+                    {"title": "Domain Watch", "message": "\n".join(lines)},
+                    blocking=False,
+                )
+            except Exception as exc:
+                _LOGGER.warning("Domain Watch notification failed for %s: %s", d.domain, exc)

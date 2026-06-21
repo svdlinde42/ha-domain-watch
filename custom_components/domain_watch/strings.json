@@ -26,10 +26,12 @@
       "init": {
         "title": "Domain Watch options",
         "data": {
-          "interval": "Poll interval (hours)"
+          "interval": "Poll interval (hours)",
+          "notify_service": "Notification service (optional)"
         },
         "data_description": {
-          "interval": "How often to check for new domains (minimum 1 hour)."
+          "interval": "How often to check for new domains (minimum 1 hour).",
+          "notify_service": "HA notify service to call on new detections (e.g. notify.mobile_app_phone). Leave empty to disable."
         }
       }
     }

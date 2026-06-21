@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import CONF_INTERVAL, CONF_KEYWORDS, DEFAULT_INTERVAL, DOMAIN, MIN_INTERVAL
+from .const import CONF_INTERVAL, CONF_KEYWORDS, CONF_NOTIFY, DEFAULT_INTERVAL, DOMAIN, MIN_INTERVAL
 
 
 class DomainWatchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -65,6 +65,7 @@ class DomainWatchOptionsFlow(config_entries.OptionsFlow):
             CONF_INTERVAL,
             self.config_entry.data.get(CONF_INTERVAL, DEFAULT_INTERVAL),
         )
+        current_notify = self.config_entry.options.get(CONF_NOTIFY, "")
 
         return self.async_show_form(
             step_id="init",
@@ -73,6 +74,7 @@ class DomainWatchOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(CONF_INTERVAL, default=current_interval): vol.All(
                         int, vol.Range(min=MIN_INTERVAL)
                     ),
+                    vol.Optional(CONF_NOTIFY, default=current_notify): str,
                 }
             ),
         )

@@ -26,10 +26,12 @@
       "init": {
         "title": "Domain Watch opties",
         "data": {
-          "interval": "Peilinginterval (uren)"
+          "interval": "Peilinginterval (uren)",
+          "notify_service": "Notificatieservice (optioneel)"
         },
         "data_description": {
-          "interval": "Hoe vaak op nieuwe domeinen wordt gecontroleerd (minimaal 1 uur)."
+          "interval": "Hoe vaak op nieuwe domeinen wordt gecontroleerd (minimaal 1 uur).",
+          "notify_service": "HA-notificatieservice die wordt aangeroepen bij nieuwe detecties (bijv. notify.mobile_app_phone). Leeg laten om uit te schakelen."
         }
       }
     }
