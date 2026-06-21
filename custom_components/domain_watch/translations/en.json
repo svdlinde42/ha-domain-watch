@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Domain Watch",
+        "description": "Monitor Certificate Transparency logs for brand impersonation domains.",
+        "data": {
+          "keywords": "Brand keywords (comma-separated)",
+          "interval": "Poll interval (hours)"
+        },
+        "data_description": {
+          "keywords": "Enter one or more brand keywords to monitor, separated by commas.",
+          "interval": "How often to check for new domains (minimum 1 hour)."
+        }
+      }
+    },
+    "error": {
+      "no_keywords": "Enter at least one keyword."
+    },
+    "abort": {
+      "already_configured": "Domain Watch is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Domain Watch options",
+        "data": {
+          "interval": "Poll interval (hours)"
+        },
+        "data_description": {
+          "interval": "How often to check for new domains (minimum 1 hour)."
+        }
+      }
+    }
+  }
+}

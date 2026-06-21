@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Domain Watch",
+        "description": "Bewaak Certificate Transparency-logs op nep-domeinen die uw merk nabootsen.",
+        "data": {
+          "keywords": "Merknaam(en) (kommagescheiden)",
+          "interval": "Peilinginterval (uren)"
+        },
+        "data_description": {
+          "keywords": "Voer een of meer merkzoektermen in, gescheiden door komma's.",
+          "interval": "Hoe vaak op nieuwe domeinen wordt gecontroleerd (minimaal 1 uur)."
+        }
+      }
+    },
+    "error": {
+      "no_keywords": "Voer ten minste één zoekterm in."
+    },
+    "abort": {
+      "already_configured": "Domain Watch is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Domain Watch opties",
+        "data": {
+          "interval": "Peilinginterval (uren)"
+        },
+        "data_description": {
+          "interval": "Hoe vaak op nieuwe domeinen wordt gecontroleerd (minimaal 1 uur)."
+        }
+      }
+    }
+  }
+}
