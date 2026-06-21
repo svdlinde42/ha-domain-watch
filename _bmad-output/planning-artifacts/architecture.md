@@ -1,5 +1,8 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
+lastStep: 8
+status: 'complete'
+completedAt: '2026-06-21'
 inputDocuments:
   - "_bmad-output/planning-artifacts/prds/prd-ha-domain-watch-2026-06-20/prd.md"
   - "_bmad-output/planning-artifacts/prds/prd-ha-domain-watch-2026-06-20/addendum.md"
@@ -12,6 +15,82 @@ date: '2026-06-21'
 # Architecture Decision Document — Domain Watch
 
 _This document builds collaboratively through step-by-step discovery. Sections are appended as we work through each architectural decision together._
+
+---
+
+## Step 7 — Architecture Validation
+
+### Coherence Validation
+
+All technology choices are mutually compatible: Python 3.12+ + asyncio + aiohttp is the standard HA stack; `DataUpdateCoordinator` + `helpers.storage.Store` + `ConfigFlow`/`OptionsFlow` are the canonical HA patterns for `cloud_polling` integrations; `pytest-homeassistant-custom-component` + `aioresponses` are the de-facto test stack. No version conflicts.
+
+Pattern consistency confirmed: `const.py` as single source of truth enforced at import; `_record_detections()` as sole mutation path eliminates write races; `dt_util.utcnow()` consistent throughout; plain dict event payload matches HA event bus requirements; `TypedDict` for `DetectionRecord` aligns with HA's own typing practices.
+
+### Requirements Coverage
+
+| FR group | Status | Primary file(s) |
+|----------|--------|----------------|
+| F-1 Keyword config | ✅ | `config_flow.py`, `const.py` |
+| F-2 crt.sh: query, dedup, fail-soft, timeout/retry | ✅ | `sources/crtsh.py`, `const.py` |
+| F-3 Store: schema_version, diff, persist, mark_reviewed | ✅ | `store.py`, `coordinator.py` |
+| F-4 RDAP: enrich, graceful fail | ✅ | `rdap.py`, coordinator error handling |
+| F-5 Events: payload, unconditional, optional notify, README examples | ✅ | `coordinator.py`, `const.py`, `README.md` |
+| F-6 Count sensor + observability attrs | ✅ | `sensor.py` |
+| F-7 scan_now, mark_reviewed services | ✅ | `__init__.py`, `services.yaml`, `coordinator.py` |
+| F-8 hacs.json, hassfest CI, README | ✅ | `hacs.json`, `validate.yml`, `README.md` |
+| F-9 en + nl translations | ✅ | `translations/en.json`, `translations/nl.json` |
+| NFR-1 Async discipline | ✅ | `async_get_clientsession`, `asyncio.timeout` |
+| NFR-2 Fault isolation | ✅ | Error handling matrix |
+| NFR-3 No credentials | ✅ | crt.sh + rdap.org are public |
+| NFR-4 Minimal footprint | ✅ | In-memory dict + HA storage |
+| NFR-5 HA coding standards | ✅ | ConfigFlow, iot_class, clean unload |
+| NFR-6 Egress documented | ✅ | crt.sh:443 + rdap.org:443 in README |
+
+### Gap Analysis
+
+**Critical gaps:** None.
+
+**Important (resolve in first implementation story):**
+- `services.yaml` field schema for `mark_reviewed` (`domain` param type/required constraint) not yet specified
+- `conftest.py` Store stub interface and clock patch target (`homeassistant.util.dt.utcnow`) not yet specified
+
+**Nice-to-have:** `pyproject.toml`/`ruff.toml` config and `requirements_test.txt` version pins — can follow blueprint defaults and lock after first passing run.
+
+### Architecture Completeness Checklist
+
+**Requirements Analysis**
+- [x] Project context thoroughly analyzed
+- [x] Scale and complexity assessed
+- [x] Technical constraints identified
+- [x] Cross-cutting concerns mapped
+
+**Architectural Decisions**
+- [x] Critical decisions documented
+- [x] Technology stack fully specified
+- [x] Integration patterns defined
+- [x] Performance considerations addressed
+
+**Implementation Patterns**
+- [x] Naming conventions established
+- [x] Structure patterns defined
+- [x] Communication patterns specified
+- [x] Process patterns documented
+
+**Project Structure**
+- [x] Complete directory structure defined
+- [x] Component boundaries established
+- [x] Integration points mapped
+- [x] Requirements to structure mapping complete
+
+### Readiness Assessment
+
+**Overall Status: READY FOR IMPLEMENTATION** — all 16 checklist items confirmed, no critical gaps.
+
+**Confidence: High.**
+
+**First implementation story:** Use `ludeeus/integration_blueprint` ("Use this template" on GitHub), rename domain to `domain_watch`, strip example files, implement Phase 1 skeleton per addendum phased delivery plan.
+
+**v2 backlog:** dnstwist source, store retention/purge, unmark_reviewed, certstream add-on.
 
 ---
 
