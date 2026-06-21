@@ -18,11 +18,9 @@ _Companion to prd.md. Contains implementation-level detail, technical decisions,
 │       ├── store.py               # wrapper around helpers.storage.Store
 │       ├── sources/
 │       │   ├── __init__.py        # Source ABC + registry
-│       │   ├── crtsh.py
-│       │   └── dnstwist_source.py
+│       │   └── crtsh.py
 │       ├── rdap.py                # enrichment helper
 │       ├── sensor.py              # detection counter + attributes
-│       ├── binary_sensor.py       # "new detection recently"
 │       ├── services.yaml          # scan_now, mark_reviewed
 │       ├── strings.json           # config-flow strings
 │       └── translations/
@@ -55,15 +53,11 @@ Registry dict keyed by source identifier enables toggle-by-key from config.
 
 ### crt.sh query
 
-- Endpoint: `https://crt.sh/?q=%25{keyword}%25&output=json`
-- Response field `name_value` contains newline-separated SANs; split and strip `*.`
-- Timeout: ~30s; exponential backoff; max 3 retries per cycle.
-
-### dnstwist
-
-- Blocking library → `hass.async_add_executor_job`
-- Lazy import: `import dnstwist` inside the fetch method, not at module level.
-- Generates typo/homoglyph/TLD permutations; filters to registered (resolving) domains only.
+- Endpoint: `https://crt.sh/?q=%25{keyword}%25&output=json&exclude=expired&deduplicate=Y`
+- `exclude=expired` drops expired certs server-side; `deduplicate=Y` collapses duplicate SANs server-side.
+- Response field `name_value` contains newline-separated SANs; split, strip `*.`, lowercase.
+- Match type: ILIKE substring (case-insensitive `%keyword%`). Catches keyword-containing domains; does not catch typosquats — that is the v2 dnstwist gap.
+- Timeout: 30s; exponential backoff; max 3 retries per cycle.
 
 ### Persistent store
 
@@ -81,8 +75,8 @@ Schema: `{domain: {first_seen: ISO8601, source: str, reviewed: bool, ...}}`
 1. For each enabled source: `await source.fetch(session, config)`
 2. Merge + normalise results.
 3. Diff against persistent store → `new_domains`.
-4. For each new domain: RDAP enrich → fire `domain_watch_detected` event → optional notify call.
-5. Write new domains to store.
+4. Write `new_domains` to store (raw, before enrichment — ensures detections are persisted even if RDAP times out).
+5. For each new domain: RDAP enrich → fire `domain_watch_detected` event → optional notify call.
 
 ### Event payload
 
@@ -100,7 +94,7 @@ Schema: `{domain: {first_seen: ISO8601, source: str, reviewed: bool, ...}}`
 }
 ```
 
-`cert_id`, `issuer_name`, and `not_before` are populated only for crt.sh detections; omitted entirely for dnstwist detections (not set to null).
+`cert_id`, `issuer_name`, and `not_before` are populated only for crt.sh detections; omitted entirely (not set to null) for other sources.
 
 ---
 
@@ -111,8 +105,8 @@ Schema: `{domain: {first_seen: ISO8601, source: str, reviewed: bool, ...}}`
 | 1 — Skeleton | Repo structure, manifest, hacs.json, const.py, empty config_flow (keywords + interval), validate.yml green | Integration loads; config flow shows keyword/interval step |
 | 2 — crt.sh + coordinator + store | crt.sh source, coordinator, dedup, sensor with count + attributes | Known keyword returns hit; repeated runs do not re-trigger |
 | 3 — Events + notifications | `domain_watch_detected` event + optional notify in OptionsFlow + README automations | New (mocked) detection fires event and, with service set, a notify call |
-| 4 — RDAP + binary_sensor + services | RDAP enrichment, binary sensor, `scan_now`, `mark_reviewed` | Event payload contains registrar/date/NS; services work; mark_reviewed suppresses repeat |
-| 5 — dnstwist + translations + README | dnstwist source (toggle-able, lazy), nl/en translations, README finalised | dnstwist toggle-able; lazy import confirmed; event loop not blocked |
+| 4 — RDAP + services | RDAP enrichment, `scan_now`, `mark_reviewed` | Event payload contains registrar/date/NS; services work; mark_reviewed suppresses repeat |
+| 5 — Translations + README | nl/en translations, README finalised (installation, config, automation examples, egress requirements) | Strings localised; README covers all user-facing steps |
 
 ---
 
