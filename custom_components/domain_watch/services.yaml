@@ -1,0 +1,15 @@
+scan_now:
+  name: Scan now
+  description: Trigger an immediate poll without waiting for the next scheduled interval.
+
+mark_reviewed:
+  name: Mark as reviewed
+  description: Mark a detected domain as reviewed to suppress it from the detections list.
+  fields:
+    domain:
+      name: Domain
+      description: The exact domain name to mark as reviewed.
+      required: true
+      example: "fake-brandname-shop.com"
+      selector:
+        text:

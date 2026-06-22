@@ -1,6 +1,7 @@
 """Coordinator for Domain Watch."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any
@@ -18,6 +19,8 @@ from .const import (
     DEFAULT_INTERVAL,
     DOMAIN,
     EVENT_DETECTED,
+    RDAP_BASE_URL,
+    RDAP_TIMEOUT,
 )
 from .sources import SOURCES, Detection
 from .store import DomainWatchStore
@@ -77,11 +80,11 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         }
 
     async def _record_detections(self, detections: list[Detection]) -> None:
-        """Write new detections to in-memory state and flush the store.
+        """Persist new detections, enrich via RDAP, then fire events.
 
-        This is the single write path — called only from _async_update_data.
-        Store is flushed before events are fired so state is durable if a
-        subsequent step fails.
+        Order: raw store flush → RDAP enrich (parallel) → enriched flush →
+        fire events → notify. Raw flush runs first so detections are never
+        lost even if RDAP or downstream steps fail.
         """
         now = dt_util.utcnow().isoformat()
         for d in detections:
@@ -95,21 +98,51 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         await self._store.async_save(self._seen)
 
+        rdap_results = await asyncio.gather(
+            *[self._enrich_rdap(d.domain) for d in detections]
+        )
+        needs_flush = False
+        for d, rdap in zip(detections, rdap_results):
+            if rdap:
+                self._seen[d.domain].update(rdap)
+                needs_flush = True
+        if needs_flush:
+            await self._store.async_save(self._seen)
+
         for d in detections:
-            self.hass.bus.async_fire(EVENT_DETECTED, {"domain": d.domain, **self._seen[d.domain]})
+            self.hass.bus.async_fire(
+                EVENT_DETECTED, {"domain": d.domain, **self._seen[d.domain]}
+            )
 
         await self._async_notify(detections)
+
+    async def _enrich_rdap(self, domain: str) -> dict[str, Any]:
+        """Fetch RDAP registration data for a domain. Returns {} on any failure."""
+        session = async_get_clientsession(self.hass)
+        try:
+            async with asyncio.timeout(RDAP_TIMEOUT):
+                async with session.get(f"{RDAP_BASE_URL}{domain}") as resp:
+                    if resp.status != 200:
+                        return {}
+                    data = await resp.json(content_type=None)
+            return _parse_rdap(data)
+        except Exception as exc:
+            _LOGGER.debug("RDAP lookup failed for %s: %s", domain, exc)
+            return {}
 
     async def _async_notify(self, detections: list[Detection]) -> None:
         """Call the configured HA notify service for each new detection."""
         raw = self._entry.options.get(CONF_NOTIFY, "").strip()
         if not raw:
             return
-        # Accept both "notify.service_name" and "service_name"
         service = raw.removeprefix("notify.")
         for d in detections:
             record = self._seen[d.domain]
             lines = [f"New impostor domain: {d.domain}"]
+            if "registrar" in record:
+                lines.append(f"Registrar: {record['registrar']}")
+            if "registration_date" in record:
+                lines.append(f"Registered: {record['registration_date']}")
             if "not_before" in record:
                 lines.append(f"Cert issued: {record['not_before']}")
             try:
@@ -120,4 +153,40 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     blocking=False,
                 )
             except Exception as exc:
-                _LOGGER.warning("Domain Watch notification failed for %s: %s", d.domain, exc)
+                _LOGGER.warning(
+                    "Domain Watch notification failed for %s: %s", d.domain, exc
+                )
+
+
+def _parse_rdap(data: dict) -> dict[str, Any]:
+    """Extract registrar, registration_date, and nameservers from an RDAP response.
+
+    Absent fields are omitted entirely — never None or empty string.
+    """
+    result: dict[str, Any] = {}
+
+    for event in data.get("events", []):
+        if event.get("eventAction") == "registration":
+            date = (event.get("eventDate") or "").strip()
+            if date:
+                result["registration_date"] = date
+            break
+
+    for entity in data.get("entities", []):
+        if "registrar" in entity.get("roles", []):
+            vcard = entity.get("vcardArray") or [None, []]
+            for item in vcard[1]:
+                if item[0] == "fn" and item[3]:
+                    result["registrar"] = item[3]
+                    break
+            break
+
+    nameservers = [
+        ns["ldhName"].lower()
+        for ns in data.get("nameservers", [])
+        if ns.get("ldhName")
+    ]
+    if nameservers:
+        result["nameservers"] = nameservers
+
+    return result

@@ -22,3 +22,7 @@ MIN_INTERVAL = 1  # hours
 CRTSH_BASE_URL = "https://crt.sh/"
 CRTSH_TIMEOUT = 30  # seconds
 CRTSH_MAX_RETRIES = 3
+
+# RDAP enrichment
+RDAP_BASE_URL = "https://rdap.org/domain/"
+RDAP_TIMEOUT = 10  # seconds
