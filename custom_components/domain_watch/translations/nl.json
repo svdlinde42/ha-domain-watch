@@ -9,7 +9,7 @@
           "interval": "Peilinginterval (uren)"
         },
         "data_description": {
-          "keywords": "Voer een of meer merkzoektermen in, gescheiden door komma's.",
+          "keywords": "Voer een of meer merkzoektermen in, gescheiden door komma's. Zoektermen worden standaard als deelstring gezocht. Gebruik % voor aangepaste patronen (bijv. merknaam% zoekt alleen domeinen die beginnen met uw zoekterm).",
           "interval": "Hoe vaak op nieuwe domeinen wordt gecontroleerd (minimaal 1 uur)."
         }
       }

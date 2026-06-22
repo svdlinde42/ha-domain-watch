@@ -53,10 +53,11 @@ Registry dict keyed by source identifier enables toggle-by-key from config.
 
 ### crt.sh query
 
-- Endpoint: `https://crt.sh/?q=%25{keyword}%25&output=json&exclude=expired&deduplicate=Y`
+- Endpoint: `https://crt.sh/?q={pattern}&output=json&exclude=expired&deduplicate=Y`
+- `pattern` = `%keyword%` if keyword contains no `%`; keyword as-is otherwise. `%` is URL-encoded to `%25`.
 - `exclude=expired` drops expired certs server-side; `deduplicate=Y` collapses duplicate SANs server-side.
 - Response field `name_value` contains newline-separated SANs; split, strip `*.`, lowercase.
-- Match type: ILIKE substring (case-insensitive `%keyword%`). Catches keyword-containing domains; does not catch typosquats — that is the v2 dnstwist gap.
+- Match type: ILIKE (case-insensitive). Default is substring (`%keyword%`); users may override with prefix (`mybrand%`), suffix (`%mybrand`), or other patterns. Does not catch typosquats — that is the v2 dnstwist gap.
 - Timeout: 30s; exponential backoff; max 3 retries per cycle.
 
 ### Persistent store

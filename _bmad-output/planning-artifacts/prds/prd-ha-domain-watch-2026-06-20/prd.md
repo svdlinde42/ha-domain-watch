@@ -44,11 +44,13 @@ Users are comfortable with HACS and basic HA concepts (automations, services) bu
 
 **FR-1.2** The user sets the poll interval (default 6 hours, minimum 1 hour).
 
+**FR-1.4** The keyword field UI description informs the user that keywords are matched as substrings by default and that `%` wildcard characters can be included for custom match patterns (e.g. `mybrand%` for prefix match, `%mybrand` for suffix match).
+
 **FR-1.3** All configuration is editable at runtime via the HA Options flow without restarting HA.
 
 ### F-2 — Certificate Transparency monitoring (crt.sh)
 
-**FR-2.1** On each poll, the integration queries crt.sh for every configured keyword using a wildcard match (`%keyword%`), returning all TLS certificates whose Subject Alternative Names contain the keyword.
+**FR-2.1** On each poll, the integration queries crt.sh for every configured keyword. Keywords without `%` are automatically matched as substrings (`%keyword%`). Keywords that include `%` are used as the literal ILIKE pattern, enabling prefix (`mybrand%`), suffix (`%mybrand`), or other custom match types.
 
 **FR-2.2** Results are deduplicated: each unique domain name is counted once regardless of how many certificates reference it. Wildcard prefixes (`*.`) are stripped; all domains are normalised to lowercase.
 

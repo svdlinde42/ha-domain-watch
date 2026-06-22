@@ -37,7 +37,10 @@ class CrtShSource(Source):
         session: aiohttp.ClientSession,
         keyword: str,
     ) -> list[Detection]:
-        url = f"{CRTSH_BASE_URL}?q=%25{keyword}%25&{_QUERY_PARAMS}"
+        # Keywords without % are wrapped as substrings; keywords that already
+        # contain % are used as-is so users can express prefix/suffix patterns.
+        pattern = keyword if "%" in keyword else f"%{keyword}%"
+        url = f"{CRTSH_BASE_URL}?q={pattern.replace('%', '%25')}&{_QUERY_PARAMS}"
         last_exc: Exception | None = None
 
         for attempt in range(1, CRTSH_MAX_RETRIES + 1):

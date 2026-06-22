@@ -9,7 +9,7 @@
           "interval": "Poll interval (hours)"
         },
         "data_description": {
-          "keywords": "Enter one or more brand keywords to monitor, separated by commas.",
+          "keywords": "Enter one or more brand keywords to monitor, separated by commas. Keywords are matched as substrings by default. Include % for custom patterns (e.g. mybrand% matches only domains starting with your keyword).",
           "interval": "How often to check for new domains (minimum 1 hour)."
         }
       }
