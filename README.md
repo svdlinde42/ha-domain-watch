@@ -28,6 +28,7 @@ Go to **Settings → Devices & Services → Add Integration → Domain Watch**.
 |-------|-------------|---------|
 | Brand keywords | Comma-separated keywords to monitor (e.g. `mybrand, my-brand`) | — |
 | Poll interval | How often to check, in hours | 6 |
+| Notification service | HA notify service to call on new detections (e.g. `notify.mobile_app_phone`). Leave empty to use automations only. | — |
 
 Settings can be changed at any time via **Configure** without restarting HA.
 
@@ -53,7 +54,7 @@ registrar: "Namecheap, Inc."        # omitted if RDAP unavailable
 registration_date: "2026-06-19T00:00:00+00:00"  # omitted if RDAP unavailable
 nameservers: ["ns1.example.com"]    # omitted if RDAP unavailable
 cert_id: 12345678
-issuer_name: "Let's Encrypt"
+issuer_name: "C=US, O=Let's Encrypt, CN=R3"
 not_before: "2026-06-19T10:00:00+00:00"
 ```
 
@@ -62,7 +63,7 @@ not_before: "2026-06-19T10:00:00+00:00"
 | Service | Description |
 |---------|-------------|
 | `domain_watch.scan_now` | Force an immediate poll outside the regular interval |
-| `domain_watch.mark_reviewed` | Permanently suppress alerts for a domain (`domain: example.com`) |
+| `domain_watch.mark_reviewed` | Mark a detected domain as reviewed (`domain: example.com`) |
 
 ## Automation examples
 
