@@ -31,7 +31,7 @@
         },
         "data_description": {
           "interval": "Hoe vaak op nieuwe domeinen wordt gecontroleerd (minimaal 1 uur).",
-          "notify_service": "HA-notificatieservice die wordt aangeroepen bij nieuwe detecties (bijv. notify.mobile_app_phone). Leeg laten om uit te schakelen."
+          "notify_service": "Notificatie-entiteit-ID die wordt aangeroepen via notify.send_message bij nieuwe detecties (bijv. notify.mobile_app_phone). Leeg laten om alleen automatiseringen te gebruiken."
         }
       }
     }

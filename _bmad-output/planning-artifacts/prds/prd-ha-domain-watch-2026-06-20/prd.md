@@ -78,7 +78,7 @@ Users are comfortable with HACS and basic HA concepts (automations, services) bu
 
 **FR-5.2** The event is fired unconditionally; it is always available for user-defined automations regardless of whether a direct notify service is configured.
 
-**FR-5.3** The user may optionally configure a notify service name. When set, the coordinator calls that service directly for each new detection with a human-readable summary. The implementation targets the HA notify API current at 2024.12.0 minimum (`notify.send_message` on notification entities).
+**FR-5.3** The user may optionally configure a notification entity ID (e.g. `notify.mobile_app_phone`). When set, the coordinator calls the `notify.send_message` action with that entity ID for each new detection, providing a human-readable summary (domain name, registrar, registration date, and cert issuance date when available). This uses the HA notification entity API introduced in HA 2024.12.0.
 
 **FR-5.4** The README documents at least two ready-to-use automation examples (mobile push and Telegram).
 

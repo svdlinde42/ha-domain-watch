@@ -75,7 +75,9 @@ automation:
     - platform: event
       event_type: domain_watch_detected
   action:
-    - service: notify.mobile_app_your_phone
+    - action: notify.send_message
+      target:
+        entity_id: notify.mobile_app_your_phone
       data:
         title: "Impostor domain detected"
         message: >
@@ -92,7 +94,9 @@ automation:
     - platform: event
       event_type: domain_watch_detected
   action:
-    - service: notify.telegram
+    - action: notify.send_message
+      target:
+        entity_id: notify.telegram
       data:
         message: >
           *Impostor domain detected*

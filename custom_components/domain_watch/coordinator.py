@@ -131,11 +131,11 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {}
 
     async def _async_notify(self, detections: list[Detection]) -> None:
-        """Call the configured HA notify service for each new detection."""
+        """Call notify.send_message on the configured notification entity."""
         raw = self._entry.options.get(CONF_NOTIFY, "").strip()
         if not raw:
             return
-        service = raw.removeprefix("notify.")
+        entity_id = raw if raw.startswith("notify.") else f"notify.{raw}"
         for d in detections:
             record = self._seen[d.domain]
             lines = [f"New impostor domain: {d.domain}"]
@@ -148,8 +148,12 @@ class DomainWatchCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 await self.hass.services.async_call(
                     "notify",
-                    service,
-                    {"title": "Domain Watch", "message": "\n".join(lines)},
+                    "send_message",
+                    {
+                        "entity_id": entity_id,
+                        "title": "Domain Watch",
+                        "message": "\n".join(lines),
+                    },
                     blocking=False,
                 )
             except Exception as exc:

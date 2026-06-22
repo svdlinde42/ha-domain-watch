@@ -89,7 +89,7 @@ Schema: `{domain: {first_seen: ISO8601, source: str, reviewed: bool, ...}}`
   "registration_date": "2026-06-19T00:00:00Z",
   "nameservers": ["ns1.example.com"],
   "cert_id": 12345678,
-  "issuer_name": "Let's Encrypt",
+  "issuer_name": "C=US, O=Let's Encrypt, CN=R3",
   "not_before": "2026-06-19T10:00:00Z"
 }
 ```

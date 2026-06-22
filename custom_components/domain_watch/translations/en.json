@@ -31,7 +31,7 @@
         },
         "data_description": {
           "interval": "How often to check for new domains (minimum 1 hour).",
-          "notify_service": "HA notify service to call on new detections (e.g. notify.mobile_app_phone). Leave empty to disable."
+          "notify_service": "Notification entity ID to call on new detections via notify.send_message (e.g. notify.mobile_app_phone). Leave empty to use automations only."
         }
       }
     }
